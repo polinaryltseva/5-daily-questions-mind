@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Дневник наблюдателя</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDEFEA;
+    --card:#F8F9F6;
+    --ink:#232B26;
+    --ink-soft:#5A665E;
+    --sage:#64796B;
+    --sage-soft:#C5CFC7;
+    --amber:#A97E2F;
+    --line:#DDE2DB;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--paper)}
+  body{
+    font-family:'IBM Plex Sans',sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    padding:28px 16px 80px;
+  }
+  .wrap{max-width:620px;margin:0 auto}
+
+  header h1{
+    font-family:'Cormorant Garamond',serif;
+    font-weight:600;font-size:34px;line-height:1.1;
+    letter-spacing:.01em;
+  }
+  header p.sub{
+    margin-top:6px;color:var(--ink-soft);font-size:14px;line-height:1.5;
+  }
+
+  /* Month dots — the month at a glance */
+  .month{
+    margin:26px 0 8px;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px 16px 12px;
+  }
+  .month-head{
+    display:flex;align-items:baseline;justify-content:space-between;
+    margin-bottom:10px;
+  }
+  .month-name{
+    font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;
+    text-transform:lowercase;
+  }
+  .month-count{font-size:12.5px;color:var(--ink-soft)}
+  .dots{display:flex;flex-wrap:wrap;gap:7px}
+  .dot{
+    width:26px;height:26px;border-radius:50%;
+    border:1px solid var(--sage-soft);
+    background:transparent;color:var(--ink-soft);
+    font-size:11px;font-family:'IBM Plex Sans',sans-serif;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:transform .12s ease, background .12s ease;
+  }
+  .dot:hover{transform:scale(1.12)}
+  .dot:focus-visible{outline:2px solid var(--sage);outline-offset:2px}
+  .dot.filled{background:var(--sage);border-color:var(--sage);color:#fff}
+  .dot.active{box-shadow:0 0 0 2px var(--paper), 0 0 0 4px var(--amber)}
+  .dot.future{opacity:.32;cursor:default}
+  .dot.future:hover{transform:none}
+
+  /* Date nav */
+  .datebar{
+    display:flex;align-items:center;justify-content:space-between;
+    margin:22px 0 4px;
+  }
+  .datebar button{
+    background:none;border:1px solid var(--line);border-radius:10px;
+    width:38px;height:38px;font-size:17px;color:var(--ink);
+    cursor:pointer;
+  }
+  .datebar button:disabled{opacity:.3;cursor:default}
+  .datebar button:focus-visible{outline:2px solid var(--sage);outline-offset:2px}
+  .date-title{text-align:center}
+  .date-title .d{
+    font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;
+  }
+  .date-title .hint{font-size:12.5px;color:var(--amber);margin-top:2px}
+
+  /* Questions */
+  .q{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:18px 18px 14px;
+    margin-top:14px;
+  }
+  .q label{
+    display:block;
+    font-weight:600;font-size:15px;line-height:1.45;
+    margin-bottom:4px;
+  }
+  .q .note{
+    font-size:13px;color:var(--ink-soft);line-height:1.5;margin-bottom:10px;
+    font-style:italic;
+    font-family:'IBM Plex Sans',sans-serif;
+  }
+  textarea{
+    width:100%;min-height:74px;resize:vertical;
+    border:1px solid var(--line);border-radius:10px;
+    background:#fff;
+    font-family:'IBM Plex Sans',sans-serif;font-size:15px;line-height:1.55;
+    color:var(--ink);
+    padding:10px 12px;
+  }
+  textarea:focus{outline:2px solid var(--sage);outline-offset:1px;border-color:var(--sage)}
+  textarea::placeholder{color:#A9B2AB}
+
+  .savebar{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-top:16px;
+  }
+  .save-status{font-size:13px;color:var(--ink-soft);min-height:18px}
+  .save-status.ok{color:var(--sage)}
+  .save-status.err{color:#9A3B2E}
+  .btn{
+    font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:14.5px;
+    background:var(--ink);color:var(--card);
+    border:none;border-radius:11px;padding:11px 20px;cursor:pointer;
+  }
+  .btn:focus-visible{outline:2px solid var(--sage);outline-offset:2px}
+  .btn.secondary{
+    background:transparent;color:var(--ink);border:1px solid var(--line);
+    font-weight:500;
+  }
+
+  /* Review */
+  .review{margin-top:34px}
+  .review h2{
+    font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;
+    margin-bottom:6px;
+  }
+  .review p{font-size:13.5px;color:var(--ink-soft);line-height:1.5;margin-bottom:12px}
+  .review-out{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+  .review-item{
+    background:var(--card);border-left:3px solid var(--sage);
+    border-radius:0 10px 10px 0;
+    padding:10px 14px;font-size:14.5px;line-height:1.55;
+  }
+  .review-item .rd{
+    font-size:12px;color:var(--ink-soft);margin-bottom:2px;
+  }
+  .empty-note{font-size:14px;color:var(--ink-soft);font-style:italic}
+
+  @media (prefers-reduced-motion: reduce){
+    .dot{transition:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>Дневник наблюдателя</h1>
+    <p class="sub">Пять вопросов о вчерашнем дне. Коротко — по одному-трём предложениям. В тяжёлые дни особенно.</p>
+  </header>
+
+  <section class="month" aria-label="Месяц">
+    <div class="month-head">
+      <div class="month-name" id="monthName"></div>
+      <div class="month-count" id="monthCount"></div>
+    </div>
+    <div class="dots" id="dots"></div>
+  </section>
+
+  <div class="datebar">
+    <button id="prevDay" aria-label="Предыдущий день">‹</button>
+    <div class="date-title">
+      <div class="d" id="dateTitle"></div>
+      <div class="hint" id="dateHint"></div>
+    </div>
+    <button id="nextDay" aria-label="Следующий день">›</button>
+  </div>
+
+  <main id="questions"></main>
+
+  <div class="savebar">
+    <div class="save-status" id="saveStatus" role="status"></div>
+    <button class="btn" id="saveBtn">Сохранить день</button>
+  </div>
+
+  <section class="review">
+    <h2>Месячная рефлексия</h2>
+    <p>В конце месяца собери подряд все ответы на первый вопрос — получится эмпирический список того, что на самом деле улучшает твоё состояние.</p>
+    <button class="btn secondary" id="reviewBtn">Собрать ответы №1 за этот месяц</button>
+    <div class="review-out" id="reviewOut"></div>
+  </section>
+
+  <section class="review">
+    <h2>Бэкап</h2>
+    <p>Записи хранятся локально в этом браузере. Раз в неделю-две выгружай всё в CSV — файл откроется в Excel или Google Таблицах.</p>
+    <button class="btn secondary" id="exportBtn">Экспорт всех записей в CSV</button>
+  </section>
+</div>
+
+<script>
+// Хранение: localStorage этого браузера. window.storage — тонкая обёртка,
+// чтобы остальной код не менялся. Бэкап — кнопка «Экспорт CSV».
+window.storage = {
+  async get(key){
+    const v = localStorage.getItem(key);
+    if(v===null) throw new Error('not found');
+    return {key, value:v};
+  },
+  async set(key, value){
+    localStorage.setItem(key, value);
+    return {key, value};
+  },
+  async delete(key){
+    localStorage.removeItem(key);
+    return {key, deleted:true};
+  },
+  async list(prefix){
+    const keys=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(!prefix || k.startsWith(prefix)) keys.push(k);
+    }
+    return {keys, prefix};
+  }
+};
+
+const QUESTIONS = [
+  {
+    id:'q1',
+    label:'1. Какие 3 конкретных момента вчера сделали мне лучше — и что именно в них сработало?',
+    note:'Не «хорошо погуляла», а конкретный момент. И механика: что именно сработало — спонтанность, тело, чувство компетентности?',
+    ph:'Момент 1… что сработало…'
+  },
+  {
+    id:'q2',
+    label:'2. Был ли момент, который я почти не заметила, но он был приятным?',
+    note:'Если не вспоминается — это нормально. Сам поиск и есть тренировка.',
+    ph:'Например, запах, свет, случайная фраза…'
+  },
+  {
+    id:'q3',
+    label:'3. В какой момент вчера я была наиболее «здесь», а в какой — на автопилоте?',
+    note:'Без осуждения, просто фиксация.',
+    ph:'Наиболее здесь… автопилот…'
+  },
+  {
+    id:'q4',
+    label:'4. Что вчера съело моё состояние — и заметила ли я это в моменте или только сейчас?',
+    note:'Цель — чтобы разрыв между «случилось» и «заметила» сокращался.',
+    ph:'Что съело… когда заметила…'
+  },
+  {
+    id:'q5',
+    label:'5. Что из вчерашнего я хочу повторить сегодня намеренно?',
+    note:'Один пункт, маленький. Мостик от наблюдения к действию.',
+    ph:'Сегодня намеренно…'
+  }
+];
+
+const MONTHS = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const MONTHS_NOM = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+const DAYS = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+
+function fmtKeyDate(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+function keyFor(dateStr){ return 'entry:'+dateStr; }
+
+let today = new Date(); today.setHours(0,0,0,0);
+let current = new Date(today); current.dateStrCache=null;
+let savedDates = new Set();
+let dirty = false;
+let saveTimer = null;
+
+const qWrap = document.getElementById('questions');
+QUESTIONS.forEach(q=>{
+  const div=document.createElement('div');
+  div.className='q';
+  div.innerHTML=`<label for="${q.id}">${q.label}</label><div class="note">${q.note}</div><textarea id="${q.id}" placeholder="${q.ph}"></textarea>`;
+  qWrap.appendChild(div);
+});
+QUESTIONS.forEach(q=>{
+  document.getElementById(q.id).addEventListener('input',()=>{
+    dirty=true;
+    setStatus('Не сохранено','');
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(saveEntry, 1500);
+  });
+});
+
+function setStatus(text, cls){
+  const el=document.getElementById('saveStatus');
+  el.textContent=text; el.className='save-status '+(cls||'');
+}
+
+async function refreshSavedDates(){
+  savedDates = new Set();
+  try{
+    const res = await window.storage.list('entry:');
+    if(res && res.keys){
+      res.keys.forEach(k=>savedDates.add(k.replace('entry:','')));
+    }
+  }catch(e){ /* пусто — записей ещё нет */ }
+}
+
+function renderMonth(){
+  const y=current.getFullYear(), m=current.getMonth();
+  document.getElementById('monthName').textContent = MONTHS_NOM[m]+' '+y;
+  const dots=document.getElementById('dots');
+  dots.innerHTML='';
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  let count=0;
+  for(let d=1; d<=daysInMonth; d++){
+    const date=new Date(y,m,d);
+    const ds=fmtKeyDate(date);
+    const b=document.createElement('button');
+    b.className='dot';
+    b.textContent=d;
+    if(savedDates.has(ds)){ b.classList.add('filled'); count++; }
+    if(ds===fmtKeyDate(current)) b.classList.add('active');
+    if(date>today){ b.classList.add('future'); b.disabled=true; }
+    else{
+      b.addEventListener('click', ()=>{ goTo(date); });
+    }
+    b.setAttribute('aria-label', d+' '+MONTHS[m]);
+    dots.appendChild(b);
+  }
+  document.getElementById('monthCount').textContent =
+    count===0 ? 'пока нет записей' : 'записей: '+count;
+}
+
+function renderDate(){
+  const ds=fmtKeyDate(current);
+  document.getElementById('dateTitle').textContent =
+    current.getDate()+' '+MONTHS[current.getMonth()]+', '+DAYS[current.getDay()];
+  const hint=document.getElementById('dateHint');
+  const yesterday=new Date(today); yesterday.setDate(today.getDate()-1);
+  if(ds===fmtKeyDate(yesterday)) hint.textContent='вчерашний день';
+  else if(ds===fmtKeyDate(today)) hint.textContent='сегодня (лучше про вчера)';
+  else hint.textContent='';
+  document.getElementById('nextDay').disabled = (ds===fmtKeyDate(today));
+}
+
+async function loadEntry(){
+  QUESTIONS.forEach(q=>{ document.getElementById(q.id).value=''; });
+  setStatus('','');
+  try{
+    const res = await window.storage.get(keyFor(fmtKeyDate(current)));
+    if(res && res.value){
+      const data=JSON.parse(res.value);
+      QUESTIONS.forEach(q=>{
+        document.getElementById(q.id).value = data[q.id]||'';
+      });
+      setStatus('Запись загружена','ok');
+    }
+  }catch(e){ /* записи за этот день нет */ }
+  dirty=false;
+}
+
+async function saveEntry(){
+  clearTimeout(saveTimer);
+  const data={};
+  let hasContent=false;
+  QUESTIONS.forEach(q=>{
+    const v=document.getElementById(q.id).value.trim();
+    data[q.id]=v;
+    if(v) hasContent=true;
+  });
+  const ds=fmtKeyDate(current);
+  if(!hasContent){
+    setStatus('Пустая запись не сохраняется','');
+    return;
+  }
+  try{
+    const result = await window.storage.set(keyFor(ds), JSON.stringify(data));
+    if(result){
+      dirty=false;
+      savedDates.add(ds);
+      renderMonth();
+      const t=new Date();
+      setStatus('Сохранено в '+String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'),'ok');
+    }else{
+      setStatus('Не удалось сохранить — попробуй ещё раз','err');
+    }
+  }catch(e){
+    setStatus('Не удалось сохранить — попробуй ещё раз','err');
+  }
+}
+
+async function goTo(date){
+  if(dirty) await saveEntry();
+  current=new Date(date); current.setHours(0,0,0,0);
+  renderDate(); renderMonth();
+  await loadEntry();
+}
+
+document.getElementById('prevDay').addEventListener('click', ()=>{
+  const d=new Date(current); d.setDate(d.getDate()-1); goTo(d);
+});
+document.getElementById('nextDay').addEventListener('click', ()=>{
+  const d=new Date(current); d.setDate(d.getDate()+1);
+  if(d<=today) goTo(d);
+});
+document.getElementById('saveBtn').addEventListener('click', saveEntry);
+
+document.getElementById('reviewBtn').addEventListener('click', async ()=>{
+  const out=document.getElementById('reviewOut');
+  out.innerHTML='';
+  const y=current.getFullYear(), m=current.getMonth();
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const items=[];
+  for(let d=1; d<=daysInMonth; d++){
+    const ds=fmtKeyDate(new Date(y,m,d));
+    if(!savedDates.has(ds)) continue;
+    try{
+      const res=await window.storage.get(keyFor(ds));
+      if(res && res.value){
+        const data=JSON.parse(res.value);
+        if(data.q1 && data.q1.trim()){
+          items.push({date:new Date(y,m,d), text:data.q1.trim()});
+        }
+      }
+    }catch(e){}
+  }
+  if(items.length===0){
+    out.innerHTML='<div class="empty-note">За этот месяц пока нет ответов на первый вопрос.</div>';
+    return;
+  }
+  items.forEach(it=>{
+    const div=document.createElement('div');
+    div.className='review-item';
+    const rd=document.createElement('div');
+    rd.className='rd';
+    rd.textContent=it.date.getDate()+' '+MONTHS[it.date.getMonth()];
+    const tx=document.createElement('div');
+    tx.textContent=it.text;
+    div.appendChild(rd); div.appendChild(tx);
+    out.appendChild(div);
+  });
+});
+
+document.getElementById('exportBtn').addEventListener('click', async ()=>{
+  const res = await window.storage.list('entry:');
+  const rows = [['date','q1_momenty','q2_nezamechennoe','q3_prisutstvie','q4_selo_sostoyanie','q5_povtorit']];
+  const dates = res.keys.map(k=>k.replace('entry:','')).sort();
+  const esc = s => '"'+String(s||'').replace(/"/g,'""')+'"';
+  for(const ds of dates){
+    try{
+      const r = await window.storage.get('entry:'+ds);
+      const d = JSON.parse(r.value);
+      rows.push([ds, d.q1, d.q2, d.q3, d.q4, d.q5].map(esc));
+    }catch(e){}
+  }
+  const csv = '\uFEFF'+rows.map(r=>Array.isArray(r)?r.join(','):r).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'dnevnik-nablyudatelya-'+fmtKeyDate(new Date())+'.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+(async function init(){
+  // По умолчанию открываем вчерашний день — рефлексия про него
+  const yesterday=new Date(today); yesterday.setDate(today.getDate()-1);
+  current=new Date(yesterday);
+  await refreshSavedDates();
+  renderDate(); renderMonth();
+  await loadEntry();
+})();
+</script>
+</body>
+</html>
